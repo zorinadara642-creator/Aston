@@ -14,6 +14,11 @@ public class Lesson_2 {
         int[] binaryArray = {1, 1, 0, 0, 0, 1, 1};
         invertBinaryArray(binaryArray);
         System.out.println("Инвертированный массив: " + Arrays.toString(binaryArray));
+        task11();
+        task12();
+        task13();
+        int[] result = createArray(5, 7);
+        System.out.println(java.util.Arrays.toString(result));
     }
 
     private static void printThreeWords() {
@@ -73,7 +78,8 @@ public class Lesson_2 {
             System.out.println(number + " - отрицательное число");
         }
     }
-    public static boolean isNegative (int number) {
+
+    public static boolean isNegative(int number) {
         System.out.println("Задание 7");
         return number < 0;
     }
@@ -84,6 +90,7 @@ public class Lesson_2 {
             System.out.println(str);
         }
     }
+
     public static boolean isLeapYear(int year) {
         System.out.println("Задание 9");
         return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
@@ -98,5 +105,50 @@ public class Lesson_2 {
                 array[i] = 0;
             }
         }
+    }
+
+    public static void task11() {
+        System.out.println("Задание 11");
+        int[] arr = new int[100];
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = i + 1;
+        }
+        System.out.println(java.util.Arrays.toString(arr));
+    }
+
+    public static void task12() {
+        System.out.println("Задание 12");
+        int[] arr = {1, 5, 3, 2, 11, 4, 5, 2, 4, 8, 9, 1};
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] < 6) {
+                arr[i] *= 2;
+            }
+        }
+        System.out.println(java.util.Arrays.toString(arr));
+    }
+
+    public static void task13() {
+        System.out.println("Задание 13");
+        int size = 5;
+        int[][] matrix = new int[size][size];
+        for (int i = 0; i < size; i++) {
+            matrix[i][i] = 1;
+            matrix[i][size - 1 - i] = 1;
+        }
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                System.out.print(matrix[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public static int[] createArray(int len, int initialValue) {
+        System.out.println("Задание 14");
+        int[] arr = new int[len];
+        for (int i = 0; i < len; i++) {
+            arr[i] = initialValue;
+        }
+        return arr;
     }
 }
