@@ -1,6 +1,7 @@
 public class Main {
     public static void main(String[] args) {
         Product[] productsArray = new Product[5];
+        System.out.println("Задание 1-2");
 
         productsArray [0] = new Product("Samsun s25",
                 "01.02.2025",
@@ -40,6 +41,8 @@ public class Main {
         for (int i = 0; i < productsArray.length; i++) {
             productsArray[i].printInfo();
         }
+
+        System.out.println("Задание 3");
 
         Park park = new Park();
         Park.Attraction a1 = park.new Attraction("Колесо обозрения", "10:00-22:00", 500);
