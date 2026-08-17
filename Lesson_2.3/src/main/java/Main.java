@@ -40,5 +40,14 @@ public class Main {
         for (int i = 0; i < productsArray.length; i++) {
             productsArray[i].printInfo();
         }
+
+        Park park = new Park();
+        Park.Attraction a1 = park.new Attraction("Колесо обозрения", "10:00-22:00", 500);
+        Park.Attraction a2 = park.new Attraction("CottonClub", "10:00-20:00", 650);
+        Park.Attraction a3 = park.new Attraction("Корабль", "12:00-22:00", 600);
+
+        a1.printInfo();
+        a2.printInfo();
+        a3.printInfo();
     }
 }
