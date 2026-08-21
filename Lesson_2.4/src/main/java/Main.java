@@ -1,5 +1,6 @@
 public class Main {
     public static void main(String[] args) {
+        System.out.println("Задание 1");
         Dog dogBobik = new Dog("Бобик");
         dogBobik.run(150);
         dogBobik.swim(5);
@@ -33,5 +34,20 @@ public class Main {
             System.out.println(cat.name + " сытость = " + cat.isSatiety());
         }
         bowl.addFood(30);
+
+        System.out.println();
+        System.out.println("Задание 2");
+        Figure circle = new Circle(5, "красный", "черный");
+        Figure rectangle = new Rectangle(4, 6, "синий", "белый");
+        Figure triangle = new Triangle(3, 4, 5, "зеленый", "серый");
+
+        System.out.println("Круг:");
+        circle.printInfo();
+
+        System.out.println("Прямоугольник:");
+        rectangle.printInfo();
+
+        System.out.println("Треугольник:");
+        triangle.printInfo();
     }
 }
