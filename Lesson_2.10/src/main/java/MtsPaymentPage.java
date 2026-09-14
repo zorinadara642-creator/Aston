@@ -1,0 +1,180 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
+public class MtsPaymentPage {
+
+    private final WebDriver driver;
+    private final WebDriverWait wait;
+
+    private final By cookieAgreeButton = By.id("cookie-agree");
+    private final By blockTitle = By.xpath("//*[contains(text(), 'Онлайн пополнение')]");
+    private final By paymentLogos = By.xpath(
+            "//img[contains(@src, 'visa') or contains(@src, 'mastercard') or contains(@src, 'belkart')]");
+    private final By detailsLink = By.linkText("Подробнее о сервисе");
+
+    private final By phoneInput = By.id("connection-phone");
+    private final By amountInput = By.id("connection-sum");
+    private final By continueButton = By.xpath("//button[contains(text(), 'Продолжить')]");
+
+    private final By tabSelectorHeader = By.cssSelector(".select__header");
+    private final By tabOption = By.cssSelector(".select__list li");
+
+    private final By modalAmountText = By.cssSelector(".pay-description__cost");
+    private final By modalButtonAmountText = By.xpath("//button[contains(., 'Оплатить')]");
+    private final By modalPhoneText = By.cssSelector(".pay-description__text");
+    private final By modalCardFields = By.cssSelector(".card-page__card input[autocomplete^='cc-']");
+    private final By modalCardLabels = By.cssSelector(".card-page__card label");
+    private final By modalPaymentIcons = By.cssSelector(".cards-brands img, .cards-brands svg");
+
+    public MtsPaymentPage(WebDriver driver) {
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    }
+
+    public void open() {
+        driver.get("https://www.mts.by/");
+        acceptCookiesIfPresent();
+    }
+
+    private void acceptCookiesIfPresent() {
+        try {
+            WebElement cookieButton = wait.until(ExpectedConditions.elementToBeClickable(cookieAgreeButton));
+            cookieButton.click();
+        } catch (Exception e) {
+            System.out.println("Баннер cookie не найден или уже закрыт");
+        }
+    }
+
+    public String getBlockTitleText() {
+        WebElement title = wait.until(ExpectedConditions.visibilityOfElementLocated(blockTitle));
+        return title.getText();
+    }
+
+    public List<WebElement> getPaymentLogos() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(paymentLogos));
+        return driver.findElements(paymentLogos);
+    }
+
+    public String clickDetailsLinkAndGetExpectedUrl() {
+        WebElement link = wait.until(ExpectedConditions.elementToBeClickable(detailsLink));
+        String expectedUrl = link.getAttribute("href");
+        link.click();
+        wait.until(ExpectedConditions.urlContains("poryadok-oplaty-i-bezopasnost"));
+        return expectedUrl;
+    }
+
+    public String getCurrentUrl() {
+        return driver.getCurrentUrl();
+    }
+
+    public void selectPaymentTab(String tabName) {
+        WebElement header = wait.until(ExpectedConditions.elementToBeClickable(tabSelectorHeader));
+        header.click();
+
+        List<WebElement> options = driver.findElements(tabOption);
+        for (WebElement option : options) {
+            if (option.getText().trim().equalsIgnoreCase(tabName)) {
+                option.click();
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Вариант оплаты не найден: " + tabName);
+    }
+
+    public List<String> getCurrentTabPlaceHolder() {
+        List<WebElement> inputs = driver.findElements(By.cssSelector("input[placeholder]"));
+        return inputs.stream()
+                .map(input -> input.getAttribute("placeholder"))
+                .collect(Collectors.toList());
+    }
+
+    public void fillConnectionForm(String phone, String amount) {
+        WebElement phoneField = wait.until(ExpectedConditions.visibilityOfElementLocated(phoneInput));
+        phoneField.sendKeys(phone);
+
+        WebElement amountField = wait.until(ExpectedConditions.visibilityOfElementLocated(amountInput));
+        amountField.sendKeys(amount);
+    }
+
+    public void clickContinue() {
+        List<WebElement> buttons = driver.findElements(continueButton);
+        WebElement visibleButton = buttons.stream()
+                .filter(WebElement::isDisplayed)
+                .findFirst()
+                .orElseThrow(() -> new NoSuchElementException("Видимая кнопка 'Продолжить' не найдена"));
+
+        String windowHandleBefore = driver.getWindowHandle();
+        int handlesBefore = driver.getWindowHandles().size();
+
+        wait.until(ExpectedConditions.elementToBeClickable(visibleButton));
+        visibleButton.click();
+
+        try { Thread.sleep(6000); } catch (InterruptedException ignored) {}
+
+        int handlesAfter = driver.getWindowHandles().size();
+        System.out.println("Вкладок до клика: " + handlesBefore + ", после клика: " + handlesAfter);
+        System.out.println("URL текущего окна: " + driver.getCurrentUrl());
+
+        // ищем любой признак Angular-модуля оплаты где угодно в DOM
+        List<WebElement> anyAngularPayment = driver.findElements(
+                By.cssSelector("app-payment-container, app-card-page, [class*='payment-page'], [class*='pay-description']"));
+        System.out.println("Найдено Angular-элементов оплаты: " + anyAngularPayment.size());
+
+        // логи консоли браузера — критично для понимания, не упал ли JS с ошибкой
+        try {
+            for (org.openqa.selenium.logging.LogEntry entry : driver.manage().logs().get(org.openqa.selenium.logging.LogType.BROWSER)) {
+                System.out.println(entry.getLevel() + ": " + entry.getMessage());
+            }
+        } catch (Exception e) {
+            System.out.println("Логи браузера недоступны: " + e.getMessage());
+        }
+    }
+
+    private final By paymentContainer = By.tagName("app-payment-container");
+
+    public String getModalAmountText() {
+        WebDriverWait longWait = new WebDriverWait(driver, Duration.ofSeconds(30));
+
+        longWait.until(ExpectedConditions.presenceOfElementLocated(paymentContainer));
+        System.out.println("app-payment-container появился в DOM");
+
+        WebElement element = longWait.until(ExpectedConditions.visibilityOfElementLocated(modalAmountText));
+        return element.getText();
+    }
+
+    public String getModalButtonAmountText() {
+        WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(modalButtonAmountText));
+        return element.getText();
+    }
+
+    public String getModalPhoneText() {
+        WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(modalPhoneText));
+        return element.getText();
+    }
+
+    public List<String> getModalCardFieldsPlaceHolder() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(modalCardLabels));
+        List<WebElement> labels = driver.findElements(modalCardLabels);
+        return labels.stream()
+                .map(WebElement::getText)
+                .collect(Collectors.toList());
+    }
+
+    public List<WebElement> getModalCardInputs() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(modalCardFields));
+        return driver.findElements(modalCardFields);
+    }
+
+    public List<WebElement> getModalPaymentIcons() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(modalPaymentIcons));
+        return driver.findElements(modalPaymentIcons);
+    }
+}
