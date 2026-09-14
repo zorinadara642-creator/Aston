@@ -50,7 +50,8 @@ public class MtsPaymentBlockTest {
                 Files.copy(screenshot.toPath(),
                         Paths.get("target/" + testInfo.getDisplayName() + ".png"),
                         StandardCopyOption.REPLACE_EXISTING);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
             driver.quit();
         }
     }

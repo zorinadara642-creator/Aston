@@ -111,31 +111,8 @@ public class MtsPaymentPage {
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Видимая кнопка 'Продолжить' не найдена"));
 
-        String windowHandleBefore = driver.getWindowHandle();
-        int handlesBefore = driver.getWindowHandles().size();
-
         wait.until(ExpectedConditions.elementToBeClickable(visibleButton));
         visibleButton.click();
-
-        try { Thread.sleep(6000); } catch (InterruptedException ignored) {}
-
-        int handlesAfter = driver.getWindowHandles().size();
-        System.out.println("Вкладок до клика: " + handlesBefore + ", после клика: " + handlesAfter);
-        System.out.println("URL текущего окна: " + driver.getCurrentUrl());
-
-        // ищем любой признак Angular-модуля оплаты где угодно в DOM
-        List<WebElement> anyAngularPayment = driver.findElements(
-                By.cssSelector("app-payment-container, app-card-page, [class*='payment-page'], [class*='pay-description']"));
-        System.out.println("Найдено Angular-элементов оплаты: " + anyAngularPayment.size());
-
-        // логи консоли браузера — критично для понимания, не упал ли JS с ошибкой
-        try {
-            for (org.openqa.selenium.logging.LogEntry entry : driver.manage().logs().get(org.openqa.selenium.logging.LogType.BROWSER)) {
-                System.out.println(entry.getLevel() + ": " + entry.getMessage());
-            }
-        } catch (Exception e) {
-            System.out.println("Логи браузера недоступны: " + e.getMessage());
-        }
     }
 
     private final By paymentContainer = By.tagName("app-payment-container");
