@@ -1,9 +1,16 @@
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -33,6 +40,8 @@ public class MtsPaymentPage {
     private final By modalCardFields = By.cssSelector(".card-page__card input[autocomplete^='cc-']");
     private final By modalCardLabels = By.cssSelector(".card-page__card label");
     private final By modalPaymentIcons = By.cssSelector(".cards-brands img, .cards-brands svg");
+
+    private final By paymentContainer = By.tagName("app-payment-container");
 
     public MtsPaymentPage(WebDriver driver) {
         this.driver = driver;
@@ -99,9 +108,16 @@ public class MtsPaymentPage {
     public void fillConnectionForm(String phone, String amount) {
         WebElement phoneField = wait.until(ExpectedConditions.visibilityOfElementLocated(phoneInput));
         phoneField.sendKeys(phone);
+        phoneField.sendKeys(Keys.TAB);
+
+        // диагностика: проверяем, что реально оказалось в поле после ввода и маски
+        System.out.println("Реальное значение поля телефона: '" + phoneField.getAttribute("value") + "'");
 
         WebElement amountField = wait.until(ExpectedConditions.visibilityOfElementLocated(amountInput));
         amountField.sendKeys(amount);
+        amountField.sendKeys(Keys.TAB);
+
+        System.out.println("Реальное значение поля суммы: '" + amountField.getAttribute("value") + "'");
     }
 
     public void clickContinue() {
@@ -111,19 +127,41 @@ public class MtsPaymentPage {
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("Видимая кнопка 'Продолжить' не найдена"));
 
+        System.out.println("Кнопка 'Продолжить' - enabled: " + visibleButton.isEnabled()
+                + ", class: " + visibleButton.getAttribute("class"));
+
         wait.until(ExpectedConditions.elementToBeClickable(visibleButton));
-        visibleButton.click();
+
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("arguments[0].click();", visibleButton);
+
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException ignored) {
+        }
+        takeDebugScreenshot("after-js-click-continue");
     }
 
-    private final By paymentContainer = By.tagName("app-payment-container");
+    private void takeDebugScreenshot(String name) {
+        try {
+            File screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+            File targetDir = new File("target/debug-screenshots");
+            if (!targetDir.exists()) {
+                targetDir.mkdirs();
+            }
+            File destination = new File(targetDir, name + "-" + System.currentTimeMillis() + ".png");
+            Files.copy(screenshot.toPath(), destination.toPath());
+            System.out.println("Скриншот сохранён: " + destination.getAbsolutePath());
+        } catch (IOException e) {
+            System.out.println("Не удалось сохранить скриншот: " + e.getMessage());
+        }
+    }
 
     public String getModalAmountText() {
-        WebDriverWait longWait = new WebDriverWait(driver, Duration.ofSeconds(30));
-
-        longWait.until(ExpectedConditions.presenceOfElementLocated(paymentContainer));
+        wait.until(ExpectedConditions.presenceOfElementLocated(paymentContainer));
         System.out.println("app-payment-container появился в DOM");
 
-        WebElement element = longWait.until(ExpectedConditions.visibilityOfElementLocated(modalAmountText));
+        WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(modalAmountText));
         return element.getText();
     }
 
